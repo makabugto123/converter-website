@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube MP3/MP4 Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #1a1a1a;
+            color: white;
+            text-align: center;
+            padding: 40px;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            margin: auto;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input {
+            background: white;
+            color: black;
+        }
+        select {
+            background: #333;
+            color: white;
+        }
+        button {
+            background: #ff5722;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #e64a19;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        a {
+            color: #4caf50;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube MP3/MP4 Converter</h1>
+    <div class="container">
+        <input type="text" id="videoUrl" placeholder="Enter YouTube URL">
+        <select id="format">
+            <option value="mp3">MP3</option>
+            <option value="mp4">MP4</option>
+        </select>
+        <button onclick="convert()">Convert</button>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        async function convert() {
+            const url = document.getElementById("videoUrl").value;
+            const type = document.getElementById("format").value;
+            const resultElement = document.getElementById("result");
+
+            if (!url) {
+                resultElement.innerHTML = "<p style='color: red;'>Please enter a YouTube URL.</p>";
+                return;
+            }
+
+            resultElement.innerHTML = "<p>Processing...</p>";
+
+            try {
+                const response = await fetch(`/convert?url=${encodeURIComponent(url)}&type=${type}`);
+                const data = await response.json();
+
+                if (data.downloadLink) {
+                    resultElement.innerHTML = `<a href="${data.downloadLink}" target="_blank">Download ${type.toUpperCase()}</a>`;
+                } else {
+                    resultElement.innerHTML = "<p style='color: red;'>Error converting video.</p>";
+                }
+            } catch (error) {
+                resultElement.innerHTML = "<p style='color: red;'>An error occurred.</p>";
+            }
+        }
+    </script>
+</body>
+</html>
+
