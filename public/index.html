@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MP3 Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        h2 {
+            margin-bottom: 15px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            background: #333;
+            color: white;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #00adb5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #008c9e;
+        }
+        #progress {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #bbb;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .footer a {
+            color: cyan;
+            text-decoration: none;
+        }
+        .video-info {
+            margin: 15px 0;
+        }
+        .toggle-btn {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #00adb5;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .toggle-btn:hover {
+            background-color: #008c9e;
+        }
+        .light-mode {
+            background-color: white;
+            color: black;
+        }
+        .light-mode input, .light-mode select, .light-mode button {
+            background-color: #f0f0f0;
+            color: black;
+        }
+        .light-mode .container {
+            background-color: #f5f5f5;
+        }
+        .light-mode .footer a {
+            color: #008c9e;
+        }
+    </style>
+</head>
+<body>
+    <button class="toggle-btn" onclick="toggleTheme()">🌙</button>
+    <div class="container">
+        <h2>MP3 Converter</h2>
+        <input type="text" id="url" placeholder="Enter YouTube URL">
+        
+        <!-- Select MP3/MP4 -->
+        <select id="downloadType" onchange="updateDownloadOptions()">
+            <option value="mp3">MP3</option>
+            <option value="mp4">MP4</option>
+        </select>
+
+        <!-- Select Bitrate for MP3 -->
+        <select id="bitrate" style="display: none;">
+            <option value="96">96 kbps</option>
+            <option value="128">128 kbps</option>
+            <option value="320">320 kbps</option>
+        </select>
+
+        <!-- Select Resolution for MP4 -->
+        <select id="resolution" style="display: none;">
+            <option value="360">360p</option>
+            <option value="720">720p</option>
+            <option value="1080">1080p</option>
+        </select>
+        
+        <button onclick="convert()">Convert</button>
+        <p id="progress"></p>
+
+        <!-- Video Info -->
+        <div class="video-info" id="videoInfo"></div>
+    </div>
+
+    <div class="footer">
+        All Rights Reserved, Created by 
+        <a href="https://www.facebook.com/danils891" target="_blank">Danilo Manto 👑</a>
+    </div>
+
+    <script>
+        let isLightMode = false;
+
+        function toggleTheme() {
+            isLightMode = !isLightMode;
+            document.body.classList.toggle("light-mode", isLightMode);
+            document.querySelector(".toggle-btn").textContent = isLightMode ? "🌚" : "🌙";
+        }
+
+        async function convert() {
+            const url = document.getElementById('url').value;
+            const downloadType = document.getElementById('downloadType').value;
+            const bitrate = document.getElementById('bitrate').value;
+            const resolution = document.getElementById('resolution').value;
+            const progressText = document.getElementById('progress');
+
+            if (!url) {
+                alert("Please enter a YouTube URL.");
+                return;
+            }
+
+            progressText.innerText = "Fetching video info...";
+
+            try {
+                const response = await fetch(`/convert?url=${encodeURIComponent(url)}&type=${downloadType}&bitrate=${bitrate}&resolution=${resolution}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    progressText.innerText = "Error: " + data.error;
+                    return;
+                }
+
+                // Display video info
+                const videoInfo = document.getElementById('videoInfo');
+                videoInfo.innerHTML = `
+                    <img src="${data.thumbnail}" alt="Thumbnail" style="max-width: 100px;">
+                    <p><strong>Title:</strong> ${data.title}</p>
+                    <p><strong>Estimated File Size:</strong> ${data.size}</p>
+                `;
+
+                progressText.innerText = "Downloading file...";
+
+                // Simulate download progress
+                let steps = ["10% done...", "30% done...", "50% done...", "70% done...", "90% done..."];
+                for (let i = 0; i < steps.length; i++) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    progressText.innerText = steps[i];
+                }
+
+                progressText.innerText = "Download complete!";
+                
+                // Show download link
+                const link = document.createElement("a");
+                link.href = data.download;
+                link.innerText = "Download " + data.title;
+                link.style.display = "block";
+                link.style.color = "cyan";
+                link.style.marginTop = "10px";
+                document.querySelector(".container").appendChild(link);
+
+            } catch (err) {
+                progressText.innerText = "Failed to convert.";
+            }
+        }
+
+        function updateDownloadOptions() {
+            const downloadType = document.getElementById('downloadType').value;
+            const bitrateSelect = document.getElementById('bitrate');
+            const resolutionSelect = document.getElementById('resolution');
+
+            if (downloadType === "mp3") {
+                bitrateSelect.style.display = "block";
+                resolutionSelect.style.display = "none";
+            } else if (downloadType === "mp4") {
+                bitrateSelect.style.display = "none";
+                resolutionSelect.style.display = "block";
+            }
+        }
+    </script>
+</body>
+</html>
